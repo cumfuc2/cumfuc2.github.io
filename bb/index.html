@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Beat Banger</title>
+    <style>
+        body {
+            margin: 0;
+            background: #222;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+            font-family: sans-serif;
+        }
+        #slideshow {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: #000;
+            overflow: hidden;
+            border: 2px solid #555;
+            margin-top: 20px;
+        }
+        #slideshow img, #slideshow video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .button-container button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .dropdown-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .dropdown-container select {
+            padding: 10px;
+            font-size: 16px;
+        }
+        #slideNumber {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="slideNumber">Slide 1</div>
+    <div class="button-container">
+        <button class="playAudio" data-audio="./bb_vol_1/cathy_e1/audio/126_virgin_newbie_master.ogg">Cathy Music</button>
+        <button class="playAudio" data-audio="./bb_vol_1/zoe_e1/audio/128_busty_bird_master.ogg">Zoe Music</button>
+        <button class="playAudio" data-audio="./bb_vol_1/gale_e1/audio/130_i_can_do_it_better_master.ogg">Gale Music</button>
+        <button class="playAudio" data-audio="./bb_vol_1/claire_e1/audio/128_the_boss_master.ogg">Claire Music</button>
+        <button class="playAudio" data-audio="./bb_vol_1/dawna_e1/audio/128_secret_weapon.ogg">Dawna Music</button>
+    </div>
+    <div id="slideshow">Loading slides…</div>
+    <div class="button-container">
+        <button id="toggleHalloween">Toggle Halloween</button>
+        <button class="showImage" data-image="cathy_e1">Show Cathy</button>
+        <button class="showImage" data-image="zoe_e1">Show Zoe</button>
+        <button class="showImage" data-image="gale_e1">Show Gale</button>
+        <button class="showImage" data-image="claire_e1">Show Claire</button>
+        <button class="showImage" data-image="dawna_e1">Show Dawna</button>
+    </div>
+    <div class="dropdown-container">
+        <select id="slideDropdown">
+            <option value="0">Prelogue</option>
+            <option value="22">Cathy Sex</option>
+            <option value="28">Post Cathy Sex</option>
+            <option value="54">Zoe Sex</option>
+            <option value="63">Post Zoe Sex</option>
+            <option value="85">Gale Sex</option>
+            <option value="90">Post Gale Sex</option>
+            <option value="117">Claire Sex</option>
+            <option value="128">Post Claire Sex</option>
+            <option value="160">Dawna Sex</option>
+            <option value="169">Post Dawna Sex</option>
+            <!-- Add more key slides as needed -->
+        </select>
+    </div>
+    <audio id="audioPlayer"></audio>
+
+    <script>
+        const slideshowDiv = document.getElementById('slideshow');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const toggleHalloweenButton = document.getElementById('toggleHalloween');
+        const showImageButtons = document.querySelectorAll('.showImage');
+        const playAudioButtons = document.querySelectorAll('.playAudio');
+        const slideDropdown = document.getElementById('slideDropdown');
+        const slideNumberDiv = document.getElementById('slideNumber');
+        let slides = [];
+        let currentSlideIndex = 0;
+        let gifAudioInterval = null;
+        let currentMediaElement = null;
+        let halloween = false;
+        const audioElements = {};
+
+        toggleHalloweenButton.addEventListener('click', () => {
+            halloween = !halloween;
+            alert(`Halloween mode is now ${halloween ? 'ON' : 'OFF'}`);
+        });
+
+        showImageButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const name = button.getAttribute('data-image');
+                const imagePath = `./bb_vol_1/${name}/images/game_over${halloween ? '_halloween' : ''}.png`;
+                showImage(imagePath);
+            });
+        });
+
+        playAudioButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const audioPath = button.getAttribute('data-audio');
+                toggleAudio(audioPath);
+            });
+        });
+
+        slideDropdown.addEventListener('change', () => {
+            const selectedIndex = parseInt(slideDropdown.value, 10);
+            currentSlideIndex = selectedIndex;
+            showSlide(selectedIndex);
+        });
+
+        function showImage(imagePath) {
+            if (gifAudioInterval) {
+                clearInterval(gifAudioInterval);
+                gifAudioInterval = null;
+            }
+            slideshowDiv.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = imagePath;
+            slideshowDiv.appendChild(img);
+            audioPlayer.pause();
+        }
+
+        function toggleAudio(audioPath) {
+            if (audioElements[audioPath]) {
+                if (audioElements[audioPath].paused) {
+                    audioElements[audioPath].play().catch(err => console.error("Audio play error:", err));
+                } else {
+                    audioElements[audioPath].pause();
+                }
+            } else {
+                const newAudio = new Audio(audioPath);
+                audioElements[audioPath] = newAudio;
+                newAudio.play().catch(err => console.error("Audio play error:", err));
+            }
+        }
+
+        fetch('image_sequence.txt')
+            .then(response => response.text())
+            .then(text => {
+                const lines = text.split('\n').filter(line => line.trim().length > 0);
+                lines.forEach((line, index) => {
+                    const parts = line.split(',').map(s => s.trim());
+                    if (parts.length < 2) return;
+                    const mediaFile = parts[0];
+                    const audios = parts.slice(1);
+                    const isGif = mediaFile.toLowerCase().endsWith('.gif');
+                    const isMp4 = mediaFile.toLowerCase().endsWith('.mp4');
+                    slides.push({ media: mediaFile, audios: audios, isGif: isGif, isMp4: isMp4, blob: null, duration: null });
+                });
+                if (slides.length > 0) {
+                    showSlide(currentSlideIndex);
+                } else {
+                    slideshowDiv.textContent = "No slides found.";
+                }
+            })
+            .catch(err => {
+                console.error("Error loading image_sequence.txt:", err);
+                slideshowDiv.textContent = "Error loading slides.";
+            });
+
+        async function getGifDuration(blob) {
+            if (!('ImageDecoder' in window)) {
+                console.warn("ImageDecoder API not supported. Using default GIF loop time.");
+                return 600;
+            }
+            try {
+                const decoder = new ImageDecoder({ data: blob, type: 'image/gif' });
+                await decoder.tracks.ready;
+                const track = decoder.tracks.selectedTrack;
+                let totalDuration = 0;
+                for (let i = 0; i < track.frameCount; i++) {
+                    const frame = await decoder.decode({ frameIndex: i });
+                    totalDuration += frame.duration;
+                }
+                return totalDuration;
+            } catch (error) {
+                console.error("Failed to decode GIF:", error);
+                return 600;
+            }
+        }
+
+        function showSlide(index) {
+            if (gifAudioInterval) {
+                clearInterval(gifAudioInterval);
+                gifAudioInterval = null;
+            }
+            slideshowDiv.innerHTML = '';
+            const slide = slides[index];
+            slideNumberDiv.textContent = `Slide ${index + 1}`;
+
+            if (slide.isGif) {
+                if (!slide.blob) {
+                    fetch(slide.media)
+                        .then(response => response.blob())
+                        .then(async blob => {
+                            slide.blob = blob;
+                            slide.duration = await getGifDuration(blob);
+                            startGifLoop(slide);
+                        })
+                        .catch(err => console.error("Error loading GIF blob:", err));
+                } else {
+                    startGifLoop(slide);
+                }
+            } else if (slide.isMp4) {
+                const video = document.createElement('video');
+                video.src = slide.media;
+                video.autoplay = true;
+                slideshowDiv.appendChild(video);
+                currentMediaElement = video;
+                if (slide.audios[0]) {
+                    audioPlayer.src = slide.audios[0];
+                    audioPlayer.play().catch(err => console.error("Audio play error:", err));
+                }
+            } else {
+                const img = document.createElement('img');
+                img.src = slide.media;
+                slideshowDiv.appendChild(img);
+                currentMediaElement = img;
+                if (slide.audios[0]) {
+                    audioPlayer.src = slide.audios[0];
+                    audioPlayer.play().catch(err => console.error("Audio play error:", err));
+                }
+            }
+        }
+
+        function startGifLoop(slide) {
+            const img = document.createElement('img');
+            currentMediaElement = img;
+            let objectURL = URL.createObjectURL(slide.blob);
+            img.src = objectURL;
+            slideshowDiv.appendChild(img);
+            playRandomAudio(slide);
+
+            gifAudioInterval = setInterval(() => {
+                URL.revokeObjectURL(objectURL);
+                objectURL = URL.createObjectURL(slide.blob);
+                currentMediaElement.src = objectURL;
+                playRandomAudio(slide);
+            }, slide.duration || 600);
+        }
+
+        function playRandomAudio(slide) {
+            if (slide.audios.length > 0) {
+                const randomAudio = slide.audios[Math.floor(Math.random() * slide.audios.length)];
+                audioPlayer.pause();
+                audioPlayer.src = randomAudio;
+                audioPlayer.currentTime = 0;
+                audioPlayer.play().catch(err => console.error("Audio play error:", err));
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowRight') {
+                currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+                showSlide(currentSlideIndex);
+            } else if (event.key === 'ArrowLeft') {
+                currentSlideIndex = (currentSlideIndex - 1 + slides.length) % slides.length;
+                showSlide(currentSlideIndex);
+            }
+        });
+    </script>
+</body>
+</html>
