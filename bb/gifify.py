@@ -29,14 +29,11 @@ def sprite_sheet_to_gif(sprite_sheet_path, n, m, output_gif_path, duration=0.1):
             frames.append(frame)
 
     # Create the GIF from frames
-    with imageio.mimwrite(output_gif_path, [frame.convert('RGB') for frame in frames], duration=duration):
-        print(f"GIF saved as: {output_gif_path}")
+    imageio.mimsave(output_gif_path, [frame.convert('RGB') for frame in frames], duration=duration)
+    print(f"GIF saved as: {output_gif_path}")
 
-# Example usage:
-sprite_sheet_to_gif(
-    sprite_sheet_path="bb_vol_1/dawna_e1/images/dawna_handjob.png",  # Path to the sprite sheet
-    n=2,  # Number of frames horizontally
-    m=3,  # Number of frames vertically
-    output_gif_path="bb_vol_1/dawna_e1/images/dawna_handjob.gif",  # Output GIF path
-    duration=0.1  # Duration of each frame in the GIF (in seconds)
-)
+
+import os
+
+for i in os.listdir("./gif/cathy"):
+    sprite_sheet_to_gif(f"./gif/cathy/{i}", 2, 3, f"./new/{i.replace('.png','')}.gif", 0.1)

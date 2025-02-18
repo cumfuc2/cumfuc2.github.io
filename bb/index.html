@@ -52,6 +52,14 @@
             font-size: 24px;
             margin-bottom: 10px;
         }
+        .video-buttons {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -71,25 +79,78 @@
         <button class="showImage" data-image="gale_e1">Show Gale</button>
         <button class="showImage" data-image="claire_e1">Show Claire</button>
         <button class="showImage" data-image="dawna_e1">Show Dawna</button>
-        <button id="autoplay">Autoplay</button>
     </div>
     <div class="dropdown-container">
         <select id="slideDropdown">
             <option value="0">Prelogue</option>
-            <option value="22">Cathy Sex</option>
-            <option value="28">Post Cathy Sex</option>
-            <option value="54">Zoe Sex</option>
-            <option value="63">Post Zoe Sex</option>
-            <option value="85">Gale Sex</option>
-            <option value="90">Post Gale Sex</option>
-            <option value="117">Claire Sex</option>
-            <option value="128">Post Claire Sex</option>
-            <option value="160">Dawna Sex</option>
-            <option value="169">Post Dawna Sex</option>
+            <option value="22">Cathy Scene</option>
+            <option value="28">Post Cathy</option>
+            <option value="54">Zoe Scene</option>
+            <option value="63">Post Zoe</option>
+            <option value="85">Gale Scene</option>
+            <option value="90">Post Gale</option>
+            <option value="117">Claire Scene</option>
+            <option value="128">Post Claire</option>
+            <option value="160">Dawna Scene</option>
+            <option value="169">Post Dawna</option>
             <!-- Add more key slides as needed -->
         </select>
+        <button id="autoplay">Autoplay</button>
+        <button id="gallery">Gallery</button>
+    </div>
+    <style>
+        .dropdown-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        #autoplay,#gallery {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        #autoplay:hover,#gallery:hover {
+            background-color: #666;
+        }
+    </style>
+    <div class="video-buttons">
+        <button class="playVideo" data-video="./bb_vol_1/cathy.mov">Cathy</button>
+        <button class="playVideo" data-video="./bb_vol_1/zoe.mov">Zoe</button>
+        <button class="playVideo" data-video="./bb_vol_1/gale.mov">Gale</button>
+        <button class="playVideo" data-video="./bb_vol_1/claire.mov">Claire</button>
+        <button class="playVideo" data-video="./bb_vol_1/dawna.mov">Dawna</button>
     </div>
     <audio id="audioPlayer"></audio>
+    <style>
+        .video-buttons {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .video-buttons button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .video-buttons button:hover {
+            background-color: #666;
+        }
+    </style>
 
     <script>
         const slideshowDiv = document.getElementById('slideshow');
@@ -97,15 +158,19 @@
         const toggleHalloweenButton = document.getElementById('toggleHalloween');
         const showImageButtons = document.querySelectorAll('.showImage');
         const playAudioButtons = document.querySelectorAll('.playAudio');
+        const playVideoButtons = document.querySelectorAll('.playVideo');
         const slideDropdown = document.getElementById('slideDropdown');
         const slideNumberDiv = document.getElementById('slideNumber');
         const autoplayButton = document.getElementById('autoplay');
+        const galleryButton = document.getElementById('gallery');
         let slides = [];
+        let gallerySlides = [{ media: '', title: '', isGif: false, isMp4: false }];
         let currentSlideIndex = 0;
         let gifAudioInterval = null;
         let currentMediaElement = null;
         let halloween = false;
         let autoplay = false;
+        let inGalleryMode = false;
         const audioElements = {};
 
         toggleHalloweenButton.addEventListener('click', () => {
@@ -128,6 +193,13 @@
             });
         });
 
+        playVideoButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const videoPath = button.getAttribute('data-video');
+                toggleVideo(videoPath);
+            });
+        });
+
         slideDropdown.addEventListener('change', () => {
             const selectedIndex = parseInt(slideDropdown.value, 10);
             currentSlideIndex = selectedIndex;
@@ -138,6 +210,16 @@
             autoplay = !autoplay;
             if (autoplay) {
                 autoplaySlides();
+            }
+        });
+
+        galleryButton.addEventListener('click', () => {
+            inGalleryMode = !inGalleryMode;
+            if (inGalleryMode) {
+                loadGallerySlides();
+            } else {
+                currentSlideIndex = 0;
+                showSlide(currentSlideIndex);
             }
         });
 
@@ -165,6 +247,22 @@
                 audioElements[audioPath] = newAudio;
                 newAudio.play().catch(err => console.error("Audio play error:", err));
             }
+        }
+
+        function toggleVideo(videoPath) {
+            if (currentMediaElement && currentMediaElement.tagName === 'VIDEO' && currentMediaElement.src === videoPath) {
+                slideshowDiv.removeChild(currentMediaElement);
+                currentMediaElement = null;
+                return;
+            }
+            slideshowDiv.innerHTML = '';
+            const video = document.createElement('video');
+            video.src = videoPath;
+            video.autoplay = true;
+            video.controls = true;
+            slideshowDiv.appendChild(video);
+            currentMediaElement = video;
+            audioPlayer.pause();
         }
 
         fetch('image_sequence.txt')
@@ -218,7 +316,7 @@
                 gifAudioInterval = null;
             }
             slideshowDiv.innerHTML = '';
-            const slide = slides[index];
+            const slide = inGalleryMode ? gallerySlides[index] : slides[index];
             slideNumberDiv.textContent = `Slide ${index + 1}`;
 
             if (slide.isGif) {
@@ -246,7 +344,7 @@
                 }
                 video.onended = () => {
                     if (autoplay) {
-                        nextSlide();
+                        setTimeout(nextSlide, 1000);
                     }
                 };
             } else {
@@ -260,7 +358,7 @@
                 }
                 audioPlayer.onended = () => {
                     if (autoplay) {
-                        nextSlide();
+                        setTimeout(nextSlide, 1000);
                     }
                 };
             }
@@ -281,11 +379,14 @@
                 currentMediaElement.src = objectURL;
                 playRandomAudio(slide);
                 loopCount++;
-                if (loopCount >= 10) {
+                if (loopCount >= 20) { // Increased loop count for longer autoplay
                     clearInterval(gifAudioInterval);
                     gifAudioInterval = null;
                     if (autoplay) {
-                        nextSlide();
+                        setTimeout(() => {
+                            loopCount = 0;
+                            nextSlide();
+                        }, 1000);
                     }
                 }
             }, slide.duration || 600);
@@ -302,19 +403,38 @@
         }
 
         function nextSlide() {
-            currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+            currentSlideIndex = (currentSlideIndex + 1) % (inGalleryMode ? gallerySlides.length : slides.length);
             showSlide(currentSlideIndex);
         }
 
         document.addEventListener('keydown', (event) => {
             if (event.key === 'ArrowRight') {
-                currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+                currentSlideIndex = (currentSlideIndex + 1) % (inGalleryMode ? gallerySlides.length : slides.length);
                 showSlide(currentSlideIndex);
             } else if (event.key === 'ArrowLeft') {
-                currentSlideIndex = (currentSlideIndex - 1 + slides.length) % slides.length;
+                currentSlideIndex = (currentSlideIndex - 1 + (inGalleryMode ? gallerySlides.length : slides.length)) % (inGalleryMode ? gallerySlides.length : slides.length);
                 showSlide(currentSlideIndex);
             }
         });
+
+        function loadGallerySlides() {
+            fetch('gallery_images.txt')
+                .then(response => response.text())
+                .then(text => {
+                    const lines = text.split('\n').filter(line => line.trim().length > 0);
+                    gallerySlides = lines.map(line => {
+                        const fileName = line.trim();
+                        const title = fileName.replace('.png', '').replace(/\b\w/g, char => char.toUpperCase());
+                        return { media: `./bb_vol_1/gallery/${fileName}`, title: title, isGif: false, isMp4: false };
+                    });
+                    currentSlideIndex = 0;
+                    showSlide(currentSlideIndex);
+                })
+                .catch(err => {
+                    console.error("Error loading gallery images:", err);
+                    slideshowDiv.textContent = "Error loading gallery.";
+                });
+        }
     </script>
 </body>
 </html>
