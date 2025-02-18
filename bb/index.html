@@ -71,6 +71,7 @@
         <button class="showImage" data-image="gale_e1">Show Gale</button>
         <button class="showImage" data-image="claire_e1">Show Claire</button>
         <button class="showImage" data-image="dawna_e1">Show Dawna</button>
+        <button id="autoplay">Autoplay</button>
     </div>
     <div class="dropdown-container">
         <select id="slideDropdown">
@@ -98,11 +99,13 @@
         const playAudioButtons = document.querySelectorAll('.playAudio');
         const slideDropdown = document.getElementById('slideDropdown');
         const slideNumberDiv = document.getElementById('slideNumber');
+        const autoplayButton = document.getElementById('autoplay');
         let slides = [];
         let currentSlideIndex = 0;
         let gifAudioInterval = null;
         let currentMediaElement = null;
         let halloween = false;
+        let autoplay = false;
         const audioElements = {};
 
         toggleHalloweenButton.addEventListener('click', () => {
@@ -129,6 +132,13 @@
             const selectedIndex = parseInt(slideDropdown.value, 10);
             currentSlideIndex = selectedIndex;
             showSlide(selectedIndex);
+        });
+
+        autoplayButton.addEventListener('click', () => {
+            autoplay = !autoplay;
+            if (autoplay) {
+                autoplaySlides();
+            }
         });
 
         function showImage(imagePath) {
@@ -234,6 +244,11 @@
                     audioPlayer.src = slide.audios[0];
                     audioPlayer.play().catch(err => console.error("Audio play error:", err));
                 }
+                video.onended = () => {
+                    if (autoplay) {
+                        nextSlide();
+                    }
+                };
             } else {
                 const img = document.createElement('img');
                 img.src = slide.media;
@@ -243,6 +258,11 @@
                     audioPlayer.src = slide.audios[0];
                     audioPlayer.play().catch(err => console.error("Audio play error:", err));
                 }
+                audioPlayer.onended = () => {
+                    if (autoplay) {
+                        nextSlide();
+                    }
+                };
             }
         }
 
@@ -254,11 +274,20 @@
             slideshowDiv.appendChild(img);
             playRandomAudio(slide);
 
+            let loopCount = 0;
             gifAudioInterval = setInterval(() => {
                 URL.revokeObjectURL(objectURL);
                 objectURL = URL.createObjectURL(slide.blob);
                 currentMediaElement.src = objectURL;
                 playRandomAudio(slide);
+                loopCount++;
+                if (loopCount >= 10) {
+                    clearInterval(gifAudioInterval);
+                    gifAudioInterval = null;
+                    if (autoplay) {
+                        nextSlide();
+                    }
+                }
             }, slide.duration || 600);
         }
 
@@ -270,6 +299,11 @@
                 audioPlayer.currentTime = 0;
                 audioPlayer.play().catch(err => console.error("Audio play error:", err));
             }
+        }
+
+        function nextSlide() {
+            currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+            showSlide(currentSlideIndex);
         }
 
         document.addEventListener('keydown', (event) => {
