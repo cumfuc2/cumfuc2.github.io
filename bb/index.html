@@ -419,6 +419,10 @@
             } else if (event.key === 'ArrowLeft' || event.key === 'a') {
                 currentSlideIndex = (currentSlideIndex - 1 + (inGalleryMode ? gallerySlides.length : slides.length)) % (inGalleryMode ? gallerySlides.length : slides.length);
                 showSlide(currentSlideIndex);
+            } else if (event.key === ' ') { 
+                autoplay = !autoplay;
+            } else if (event.key === 'g') {
+                inGalleryMode = !inGalleryMode;
             }
         });
 
