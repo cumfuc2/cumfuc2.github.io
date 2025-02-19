@@ -63,6 +63,11 @@
     </style>
 </head>
 <body>
+    <script>
+        if (!localStorage.getItem('loggedIn')) {
+            window.location.href = '../login.html';
+        }
+    </script>
     <div id="slideNumber">Slide 1</div>
     <div class="button-container">
         <button class="playAudio" data-audio="./bb_vol_1/cathy_e1/audio/126_virgin_newbie_master.ogg">Cathy Music</button>

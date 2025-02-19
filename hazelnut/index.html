@@ -22,6 +22,11 @@
   </style>
 </head>
 <body>
+  <script>
+    if (!localStorage.getItem('loggedIn')) {
+        window.location.href = '../login.html';
+    }
+</script>
   <!-- Include THREE.js from a CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <!-- Main game logic -->
