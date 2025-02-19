@@ -413,14 +413,15 @@
         }
 
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'ArrowRight') {
+            if (event.key === 'ArrowRight' || event.key === 'd') {
                 currentSlideIndex = (currentSlideIndex + 1) % (inGalleryMode ? gallerySlides.length : slides.length);
                 showSlide(currentSlideIndex);
-            } else if (event.key === 'ArrowLeft') {
+            } else if (event.key === 'ArrowLeft' || event.key === 'a') {
                 currentSlideIndex = (currentSlideIndex - 1 + (inGalleryMode ? gallerySlides.length : slides.length)) % (inGalleryMode ? gallerySlides.length : slides.length);
                 showSlide(currentSlideIndex);
             }
         });
+
 
         function loadGallerySlides() {
             fetch('gallery_images.txt')
